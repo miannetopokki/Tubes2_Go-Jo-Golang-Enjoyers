@@ -26,10 +26,10 @@ import (
 	}
 
 	// Load HTML document
-	// doc, err := goquery.NewDocumentFromReader(res.Body)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
+	doc, err := goquery.NewDocumentFromReader(res.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
 	fmt.Println(url)
 
 	// Find the index of the keyword
