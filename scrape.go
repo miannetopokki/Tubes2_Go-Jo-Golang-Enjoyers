@@ -2,8 +2,11 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"net/http"
+	"os"
+	"strings"
 
 	"github.com/PuerkitoBio/goquery"
 )
@@ -25,6 +28,10 @@ func URLExists(url string) bool {
 
 func CreateWikiURL(title string) string {
 	return "https://en.wikipedia.org/wiki/" + title 
+}
+
+func GetTitle(url string) string {
+	return url[6:]
 }
 
 func AskTitleInput(prompt string) string {
@@ -77,7 +84,27 @@ func loadHTML(url string) (*goquery.Document, string) {
 	// Return document and title
 	var title string = doc.Find(".mw-page-title-main").First().Text()
 	return doc, title
-} 
+}
+
+func IsValidURL(url string) bool {
+	return strings.HasPrefix(url, "/wiki/") && !strings.Contains(url, ":") && !strings.Contains(url, "#") && !strings.Contains(url, "#")
+}
+
+func CheckLinks(url string) {
+	var doc *goquery.Document
+	var title string
+
+	doc, title = loadHTML(url)
+
+	fmt.Printf("Page title: %s\n\n", title)
+
+	doc.Find("a").Each(func(i int, s *goquery.Selection) {
+		link, exists := s.Attr("href")
+		if exists && IsValidURL(link) {
+			fmt.Println(link)
+		}
+	})
+}
 
 func main() {
 	// Read starting page
@@ -88,11 +115,25 @@ func main() {
 
 	// Get document and title
 	var doc *goquery.Document
-	var title string
+	// var title string
 
-	doc, title = loadHTML(startURL)
+	doc, _ = loadHTML(startURL)
 
-	// Print title
-	doc.Find("a")
-	fmt.Println("Page title:", title)
+    // Open or create a file for writing
+    file, err := os.OpenFile("result.txt", os.O_WRONLY|os.O_CREATE, 0644)
+    if err != nil {
+        fmt.Println("Error:", err)
+        return
+    }
+    defer file.Close() // Ensure the file is closed when the function returns
+
+	// Find all links
+	doc.Find("a").Each(func(i int, s *goquery.Selection) {
+		link, exists := s.Attr("href")
+		if exists && IsValidURL(link) {
+			var newURL string = "https://en.wikipedia.org" + link
+			
+			_, err = io.WriteString(file, newURL + "\n")
+		}
+	})
 }
