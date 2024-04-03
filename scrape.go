@@ -90,20 +90,34 @@ func IsValidURL(url string) bool {
 	return strings.HasPrefix(url, "/wiki/") && !strings.Contains(url, ":") && !strings.Contains(url, "#") && !strings.Contains(url, "#")
 }
 
-func CheckLinks(url string) {
+func CheckLinks(file *os.File, url string, seen *map[string]bool) {
 	var doc *goquery.Document
 	var title string
 
 	doc, title = loadHTML(url)
 
-	fmt.Printf("Page title: %s\n\n", title)
+	// Write current page to file
+	io.WriteString(file, "Page title: " + title + "\n\n")
+	
+	// Check if title has already been seen or not
+	if !(*seen)[title] {
+		// Print current page title
+		fmt.Printf("Page title: %s\n", title)
+		
+		// Set title to seen
+		(*seen)[title] = true
 
-	doc.Find("a").Each(func(i int, s *goquery.Selection) {
-		link, exists := s.Attr("href")
-		if exists && IsValidURL(link) {
-			fmt.Println(link)
-		}
-	})
+		// Iterate through all links
+		doc.Find("a").Each(func(i int, s *goquery.Selection) {
+			link, exists := s.Attr("href")
+			if exists && IsValidURL(link) {
+				var newURL string = "https://en.wikipedia.org" + link
+	
+				io.WriteString(file, newURL + "\n")
+			}
+		})
+	}
+	
 }
 
 func main() {
@@ -113,12 +127,6 @@ func main() {
 	// Read ending page
 	// var endURL string = AskTitleInput("Input ending page: ")
 
-	// Get document and title
-	var doc *goquery.Document
-	// var title string
-
-	doc, _ = loadHTML(startURL)
-
     // Open or create a file for writing
     file, err := os.OpenFile("result.txt", os.O_WRONLY|os.O_CREATE, 0644)
     if err != nil {
@@ -127,13 +135,27 @@ func main() {
     }
     defer file.Close() // Ensure the file is closed when the function returns
 
+	// Get document and title
+	var doc *goquery.Document
+	var title string
+
+	doc, title = loadHTML(startURL)
+
+	// Write starting page title to file
+	io.WriteString(file, "Starting page title: " + title + "\n\n")
+
+	// Initialize map of found pages
+	seen := make(map[string]bool)
+
 	// Find all links
 	doc.Find("a").Each(func(i int, s *goquery.Selection) {
 		link, exists := s.Attr("href")
 		if exists && IsValidURL(link) {
 			var newURL string = "https://en.wikipedia.org" + link
-			
-			_, err = io.WriteString(file, newURL + "\n")
+
+			io.WriteString(file, "============================================================\n")
+			CheckLinks(file, newURL, &seen)
+			// _, err = io.WriteString(file, newURL + "\n")
 		}
 	})
 }
