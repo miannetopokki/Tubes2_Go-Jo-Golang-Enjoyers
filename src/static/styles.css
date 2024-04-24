@@ -133,9 +133,10 @@ body {
     display: flex;
     font-family: "Mansalva", sans-serif;
     justify-content: center;
-    font-size: 20px;
+    font-size: 25px;
     background-color: #00944a;
     margin-top: 1%;
+    text-align: center;
 }
 
 .failed {
@@ -145,4 +146,5 @@ body {
     font-size: 50px;
     background-color: rgb(236, 48, 48);
     margin-top: 1%;
+    text-align: center;
 }

@@ -74,9 +74,9 @@
                 {{if .ValidDest}}
                     {{if .Success}}
                         <div class="result">
-                            <h1>
-                                RESULT: {{.Result}} dengan Algoritma {{.Algorithm}} <br>
-                            </h1>
+                            Sebanyak {{.Results2.Artikel}} artikel telah ditelusuri selama {{.Results2.Time}} ms. <br>
+                            Hasil ditemukan pada derajat {{.Results2.Degrees}} dengan Algoritma {{.Algorithm}}: <br>
+                            {{.Result}}
                         </div>
 
                     {{else}}
