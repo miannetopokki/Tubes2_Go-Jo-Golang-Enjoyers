@@ -61,7 +61,10 @@ func WikiGame(w http.ResponseWriter, r *http.Request) {
 		Time:    0,
 		Artikel: 0,
 	}
-	finalResult = searchIDS(infoSrcDest.Source, infoSrcDest.Destination, 10)
+
+	if (validSrc) && (validDest) {
+		finalResult = searchIDS(infoSrcDest.Source, infoSrcDest.Destination, 10)
+	}
 
 	tmpl.Execute(w, struct {
 		Sent      bool

@@ -60,11 +60,13 @@
 
             <div class="failed">
                 {{if not .ValidSrc}}
-                    HALAMAN WIKIPEDIA ASAL TIDAK VALID!
-                    <br>
+                    Halaman Wikipedia asal tidak valid!
+                    {{if not .ValidDest}}
+                        <br>
+                    {{end}}
                 {{end}}
                 {{if not .ValidDest}}
-                    HALAMAN WIKIPEDIA TUJUAN TIDAK VALID!
+                    Halaman Wikipedia tujuan tidak valid!
                 {{end}}
             </div>
 
@@ -73,7 +75,7 @@
                     {{if .Success}}
                         <div class="result">
                             <h1>
-                                RESULT: {{.Result}} Using {{.Algorithm}} <br>
+                                RESULT: {{.Result}} dengan Algoritma {{.Algorithm}} <br>
                             </h1>
                         </div>
 
