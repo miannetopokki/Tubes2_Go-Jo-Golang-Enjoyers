@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"text/template"
 )
@@ -52,6 +53,15 @@ func WikiGame(w http.ResponseWriter, r *http.Request) {
 	if isValidWikiLink(destLink) {
 		validDest = true
 	}
+	var emptylist []string
+
+	finalResult := resultStruct{
+		Path:    emptylist,
+		Degrees: 0,
+		Time:    0,
+		Artikel: 0,
+	}
+	finalResult = searchIDS(infoSrcDest.Source, infoSrcDest.Destination, 10)
 
 	tmpl.Execute(w, struct {
 		Sent      bool
@@ -59,9 +69,10 @@ func WikiGame(w http.ResponseWriter, r *http.Request) {
 		ValidSrc  bool
 		ValidDest bool
 		Results   wikiGameInfo
+		Results2  resultStruct
 		Result    string
 		Algorithm string
-	}{sent, succeed, validSrc, validDest, infoSrcDest, result, algorithm})
+	}{sent, succeed, validSrc, validDest, infoSrcDest, finalResult, result, algorithm})
 }
 
 func isValidWikiLink(url string) bool {
@@ -76,6 +87,12 @@ func isValidWikiLink(url string) bool {
 }
 
 func main() {
+	go func() {
+		log.Println(http.ListenAndServe("localhost:6060", nil))
+	}()
+
+	cache.items = make(map[string]*cachedItem)
+	cache.maxItems = 1000 // Set batasan ukuran cache di sini
 	http.HandleFunc("/", WikiGame)
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 	link := "http://localhost:8080"
