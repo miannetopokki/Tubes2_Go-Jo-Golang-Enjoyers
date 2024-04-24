@@ -1,0 +1,90 @@
+<html>
+    <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Mansalva&family=Open+Sans:ital,wght@0,800;1,800&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="static/styles.css">
+        <title>WikiGame</title>
+    </head>
+    <body>
+
+        <!-- <div class="advertisement">
+            <a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ">
+                <img src="https://rebahinxxi.shop/iklan//Pro-V2.gif">
+            </a>
+            <img src="https://rebahinxxi.shop/iklan/asiaforbet539x59.gif">
+            <img src="https://rebahinxxi.shop/iklan//Pro-V2.gif">
+
+            <marquee behavior="scroll" direction="left" style="background-color: yellow; font-size: 80px">Menangkan Hadiah Jutaan Rupiah Hanya di Olympia88!</marquee>
+        </div> -->
+
+        <div class="title">
+            <h1 class="head1">
+                WIKIPEDIA PATH
+            </h1>
+            <h1 class="head2">
+                Finder
+            </h1>
+        </div>
+
+        <br>
+        <br>
+
+        <div class="formContainer">
+            <h1 class="formText">try it out!</h1>
+            <form method="POST" action="/">
+                <div class="formInputContainer">
+                    <div class="formInput fi1">
+                        <label for="src"></label>
+                        <input type="text" name="src" placeholder="Halaman Wikipedia awal" {{if .Success}} value="{{.Results.Source}}" {{end}} required>
+                    </div>
+                    <div class="arrowSymbol"> &#8594</div>
+                    <div class="formInput fi2">
+                        <label for="dest"></label>
+                        <input type="text" name="dest" placeholder="Halaman Wikipedia tujuan" {{if .Success}} value="{{.Results.Destination}}" {{end}} required>
+                    </div>
+                </div>
+
+                <div class="buttonContainer">
+                    <button class="b1" type="submit" name="algorithm" value="BFS">
+                        BFS
+                    </button>
+                    <button class="b2" type="submit" name="algorithm" value="IDS">
+                        IDS
+                    </button>
+                </div> 
+            </form>
+        </div>
+
+        {{if .Sent}}
+
+            <div class="failed">
+                {{if not .ValidSrc}}
+                    HALAMAN WIKIPEDIA ASAL TIDAK VALID!
+                {{end}}
+                <br>
+                {{if not .ValidDest}}
+                    HALAMAN WIKIPEDIA TUJUAN TIDAK VALID!
+                {{end}}
+            </div>
+
+            {{if .ValidSrc}}
+                {{if .ValidDest}}
+                    {{if .Success}}
+                        <div class="result">
+                            <h1>
+                                RESULT: {{.Result}} Using {{.Algorithm}} <br>
+                            </h1>
+                        </div>
+
+                    {{else}}
+
+                    {{end}}
+                {{end}}
+            {{end}}
+        {{end}}
+
+
+
+    </body>
+</html>
