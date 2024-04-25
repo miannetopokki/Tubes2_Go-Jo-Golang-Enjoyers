@@ -74,20 +74,20 @@ func WikiGame(w http.ResponseWriter, r *http.Request) {
 		for i, page := range finalResult.Path {
 			result += page
 			if i != len(finalResult.Path)-1 {
-				result += " -> "
+				result += " → "
 			}
 		}
 	}
 
 	tmpl.Execute(w, struct {
-		Sent      bool
-		Success   bool
-		ValidSrc  bool
-		ValidDest bool
-		Results   wikiGameInfo
-		Results2  resultStruct
-		Result    string
-		Algorithm string
+		Sent        bool
+		Success     bool
+		ValidSrc    bool
+		ValidDest   bool
+		InfoSrcDest wikiGameInfo
+		Results     resultStruct
+		Result      string
+		Algorithm   string
 	}{sent, succeed, validSrc, validDest, infoSrcDest, finalResult, result, algorithm})
 }
 
