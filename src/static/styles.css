@@ -155,10 +155,12 @@ body {
     display: none;
     position: fixed;
     top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    left: 886px;
+    /* transform: translate(-50%, -50%); */
 }
 
 .loading-gif {
+    width: 20%;
+    height: 20%;
     position: relative;
 }
