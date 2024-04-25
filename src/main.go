@@ -63,7 +63,25 @@ func WikiGame(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if (validSrc) && (validDest) {
-		finalResult = searchIDS(infoSrcDest.Source, infoSrcDest.Destination, 10)
+		if (algorithm == "IDS") {
+			finalResult = searchIDS(infoSrcDest.Source, infoSrcDest.Destination, 10)
+		} else {
+			finalResult = resultStruct{
+				Path: []string{"Indonesia", "Sun", "Earth"},
+				Degrees: 69,
+				Time: 420,
+				Artikel: 1337,
+			}
+		}
+
+		// Create result path
+		result = ""
+		for i, page := range finalResult.Path {
+			result += page
+			if i != len(finalResult.Path) - 1 {
+				result += " -> "
+			}
+		}
 	}
 
 	tmpl.Execute(w, struct {
