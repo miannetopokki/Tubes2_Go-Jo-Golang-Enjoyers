@@ -149,13 +149,11 @@ body {
     text-align: center;
 }
 
-
-
 .loading-container {
     display: none;
     position: fixed;
     top: 50%;
-    left: 886px;
+    left: 890px;
     /* transform: translate(-50%, -50%); */
 }
 

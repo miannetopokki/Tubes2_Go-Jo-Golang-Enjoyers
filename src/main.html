@@ -63,10 +63,10 @@
                 </div>
 
                 <div class="buttonContainer">
-                    <button class="b1" type="submit" name="algorithm" value="BFS" onclick="showLoading()">
+                    <button class="b1" type="submit" name="algorithm" value="BFS" {{if .Success}} onclick="showLoading()" {{end}}> 
                         BFS
                     </button>
-                    <button class="b2" type="submit" name="algorithm" value="IDS" onclick="showLoading()">
+                    <button class="b2" type="submit" name="algorithm" value="IDS" {{if .Success}} onclick="showLoading()" {{end}}>
                         IDS
                     </button>
                 </div>
