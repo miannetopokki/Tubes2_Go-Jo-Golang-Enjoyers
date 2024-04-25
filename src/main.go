@@ -63,7 +63,7 @@ func WikiGame(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if (validSrc) && (validDest) {
-		if (algorithm == "IDS") {
+		if algorithm == "IDS" {
 			finalResult = searchIDS(infoSrcDest.Source, infoSrcDest.Destination, 10)
 		} else {
 			finalResult = BFS(infoSrcDest.Source, infoSrcDest.Destination)
@@ -73,7 +73,7 @@ func WikiGame(w http.ResponseWriter, r *http.Request) {
 		result = ""
 		for i, page := range finalResult.Path {
 			result += page
-			if i != len(finalResult.Path) - 1 {
+			if i != len(finalResult.Path)-1 {
 				result += " -> "
 			}
 		}
@@ -103,12 +103,10 @@ func isValidWikiLink(url string) bool {
 }
 
 func main() {
+
 	go func() {
 		log.Println(http.ListenAndServe("localhost:6060", nil))
 	}()
-
-	cache.items = make(map[string]*cachedItem)
-	cache.maxItems = 1000 // Set batasan ukuran cache di sini
 	http.HandleFunc("/", WikiGame)
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 	link := "http://localhost:8080"

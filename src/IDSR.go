@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
 	"strings"
 	"sync"
@@ -9,25 +10,12 @@ import (
 	"time"
 
 	"github.com/PuerkitoBio/goquery"
+	"github.com/allegro/bigcache"
 )
 
-var cache struct {
-	sync.Mutex
-	items    map[string]*cachedItem
-	maxItems int
-}
-
-//	type result struct{
-//		path string[]
-//		degrees int
-//		time int
-//		artikel int
-//	}
-type cachedItem struct {
-	doc  *goquery.Document
-	time time.Time
-}
-
+var (
+	cache *bigcache.BigCache
+)
 var uniqueLinkCount int
 var visitedLinks = struct {
 	sync.RWMutex
@@ -36,7 +24,6 @@ var visitedLinks = struct {
 
 var destinationFound int32 = 0
 var stopSearchClosed int32
-var inProgress = make(map[string]struct{})
 var goroutineLimit int = 5 // pasang max goroutine disini
 var reachedDestination bool = false
 
@@ -54,6 +41,13 @@ var reachedDestination bool = false
 // }
 
 func searchIDS(source_link string, destination_link string, maxdepth int) resultStruct {
+	cache, err := bigcache.NewBigCache(bigcache.DefaultConfig(10 * time.Minute))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Redirect log output to ioutil.Discard to suppress log messages
+	log.SetOutput(ioutil.Discard)
 	var path []string
 	var final_path []string
 	degree := 0
@@ -63,17 +57,17 @@ func searchIDS(source_link string, destination_link string, maxdepth int) result
 
 	for i := 0; i < maxdepth; i++ {
 		fmt.Println("Searching in depth ", i+1, "...")
-		dfs(source_link, url, destination_link, i, 0, &reachedDestination, &path, &final_path)
+		dfs(source_link, url, destination_link, i, 0, &reachedDestination, &path, &final_path, cache)
 		if reachedDestination {
 			finish := time.Now()
 			elapsed := finish.Sub(start)
-			waktu = int(elapsed.Seconds())
+			waktu = int(elapsed.Milliseconds())
 			fmt.Println("Time : ", elapsed)
 			fmt.Println("Total unique links:", uniqueLinkCount)
 			fmt.Println("Path:", source_link, " -> ", strings.Join(final_path, " -> "))
 			fmt.Println("Destination reached!")
 			fmt.Println("Depth : ", i+1)
-			degree = i
+			degree = i + 1
 
 			break
 		} else {
@@ -88,17 +82,20 @@ func searchIDS(source_link string, destination_link string, maxdepth int) result
 		Artikel: uniqueLinkCount,
 	}
 	uniqueLinkCount = 0
+	visitedLinks.Lock()
+	defer visitedLinks.Unlock()
+	visitedLinks.m = make(map[string]bool)
 	return result
 
 }
 
-func dfs(input string, url string, destination string, maxDepth int, currentDepth int, reachedDestination *bool, path *[]string, finalpath *[]string) {
+func dfs(input string, url string, destination string, maxDepth int, currentDepth int, reachedDestination *bool, path *[]string, finalpath *[]string, cache *bigcache.BigCache) {
 
 	if currentDepth > maxDepth || atomic.LoadInt32(&destinationFound) == 1 || *reachedDestination {
 		return
 	}
 
-	doc, found := getFromCache(url)
+	doc, found := getFromCache(url, cache)
 	if !found {
 		var err error
 		doc, err = goquery.NewDocument(url)
@@ -106,7 +103,7 @@ func dfs(input string, url string, destination string, maxDepth int, currentDept
 			log.Printf("Error loading %s: %v", url, err)
 			return
 		}
-		cacheDocument(url, doc)
+		cacheDocument(url, doc, cache)
 	}
 
 	var wg sync.WaitGroup
@@ -116,7 +113,7 @@ func dfs(input string, url string, destination string, maxDepth int, currentDept
 
 	doc.Find("a").Each(func(i int, s *goquery.Selection) {
 		link, exists := s.Attr("href")
-		if exists && isValidLink(link) {
+		if exists && isValidLink(link, input, path) {
 			visitedLinks.Lock()
 			if !visitedLinks.m[link] {
 				visitedLinks.m[link] = true
@@ -153,7 +150,7 @@ func dfs(input string, url string, destination string, maxDepth int, currentDept
 						<-concurrencyLimit
 						wg.Done()
 					}()
-					dfs(input, "https://en.wikipedia.org"+link, destination, maxDepth, currentDepth+1, reachedDestination, &newPath, finalpath)
+					dfs(input, "https://en.wikipedia.org"+link, destination, maxDepth, currentDepth+1, reachedDestination, &newPath, finalpath, cache)
 				}(link)
 			}
 		}
@@ -171,41 +168,35 @@ func getTitleFromURL(url string) string {
 	return ""
 }
 
-func getFromCache(url string) (*goquery.Document, bool) {
-	cache.Lock()
-	defer cache.Unlock()
-	item, found := cache.items[url]
-	if found && time.Since(item.time) > time.Hour {
-		delete(cache.items, url)
-		found = false
-	}
-	if !found {
+func getFromCache(url string, cache *bigcache.BigCache) (*goquery.Document, bool) {
+	entry, err := cache.Get(url)
+	if err != nil {
 		return nil, false
 	}
-	return item.doc, true
-}
-
-func cacheDocument(url string, doc *goquery.Document) {
-	cache.Lock()
-	defer cache.Unlock()
-	if len(cache.items) >= cache.maxItems {
-		evictOldestFromCache()
+	doc, err := goquery.NewDocumentFromReader(strings.NewReader(string(entry)))
+	if err != nil {
+		log.Printf("Error parsing cached document for %s: %v", url, err)
+		return nil, false
 	}
-	cache.items[url] = &cachedItem{doc: doc, time: time.Now()}
+	return doc, true
 }
 
-func evictOldestFromCache() {
-	oldestURL := ""
-	oldestTime := time.Now()
-	for url, item := range cache.items {
-		if item.time.Before(oldestTime) {
-			oldestURL = url
-			oldestTime = item.time
+func cacheDocument(url string, doc *goquery.Document, cache *bigcache.BigCache) {
+	html, err := doc.Html()
+	if err != nil {
+		log.Printf("Error getting HTML content of document for %s: %v", url, err)
+		return
+	}
+	if err := cache.Set(url, []byte(html)); err != nil {
+		log.Printf("Error caching document for %s: %v", url, err)
+	}
+}
+
+func isValidLink(link string, input string, path *[]string) bool {
+	for _, visitedLink := range *path {
+		if visitedLink == link {
+			return false
 		}
 	}
-	delete(cache.items, oldestURL)
-}
-
-func isValidLink(link string) bool {
-	return strings.HasPrefix(link, "/wiki/") && !strings.Contains(link, ":") && !strings.Contains(link, "Main_Page")
+	return strings.HasPrefix(link, "/wiki/") && !strings.Contains(link, ":") && !strings.Contains(link, "Main_Page") && getTitleFromURL(link) != input
 }
