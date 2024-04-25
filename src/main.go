@@ -66,12 +66,7 @@ func WikiGame(w http.ResponseWriter, r *http.Request) {
 		if (algorithm == "IDS") {
 			finalResult = searchIDS(infoSrcDest.Source, infoSrcDest.Destination, 10)
 		} else {
-			finalResult = resultStruct{
-				Path: []string{"Indonesia", "Sun", "Earth"},
-				Degrees: 69,
-				Time: 420,
-				Artikel: 1337,
-			}
+			finalResult = BFS(infoSrcDest.Source, infoSrcDest.Destination)
 		}
 
 		// Create result path
