@@ -349,7 +349,7 @@ func BFS(startPage string, endPage string) resultStruct {
 	var startURL string = CreateWikiURL(startPage)
 	var endURL string = CreateWikiURL(endPage)
 
-	file, _ = os.OpenFile("debug.txt", os.O_WRONLY|os.O_CREATE, 0644)
+	// file, _ = os.OpenFile("debug.txt", os.O_WRONLY|os.O_CREATE, 0644)
 	
 	// Read starting page
 	_, startTitle = loadHTML(startURL)

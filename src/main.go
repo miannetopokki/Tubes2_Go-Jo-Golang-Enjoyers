@@ -63,34 +63,35 @@ func WikiGame(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if (validSrc) && (validDest) {
-		if (algorithm == "IDS") {
+		if algorithm == "IDS" {
 			finalResult = searchIDS(infoSrcDest.Source, infoSrcDest.Destination, 10)
 		} else {
+			ReadCache()
 			finalResult = BFS(infoSrcDest.Source, infoSrcDest.Destination)
+			WriteCache()
 		}
 
 		// Create result path
 		result = ""
 		for i, page := range finalResult.Path {
 			result += page
-			if i != len(finalResult.Path) - 1 {
-				result += " -> "
+			if i != len(finalResult.Path)-1 {
+				result += " → "
 			}
 		}
 	}
 
 	tmpl.Execute(w, struct {
-		Sent      bool
-		Success   bool
-		ValidSrc  bool
-		ValidDest bool
-		Results   wikiGameInfo
-		Results2  resultStruct
-		Result    string
-		Algorithm string
+		Sent        bool
+		Success     bool
+		ValidSrc    bool
+		ValidDest   bool
+		InfoSrcDest wikiGameInfo
+		Results     resultStruct
+		Result      string
+		Algorithm   string
 	}{sent, succeed, validSrc, validDest, infoSrcDest, finalResult, result, algorithm})
 
-	WriteCache()
 }
 
 func isValidWikiLink(url string) bool {
@@ -105,14 +106,12 @@ func isValidWikiLink(url string) bool {
 }
 
 func main() {
+
 	go func() {
 		log.Println(http.ListenAndServe("localhost:6060", nil))
 	}()
 
-	ReadCache()
 
-	cache.items = make(map[string]*cachedItem)
-	cache.maxItems = 1000 // Set batasan ukuran cache di sini
 	http.HandleFunc("/", WikiGame)
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 	link := "http://localhost:8080"

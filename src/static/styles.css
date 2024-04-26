@@ -148,3 +148,17 @@ body {
     margin-top: 1%;
     text-align: center;
 }
+
+.loading-container {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 890px;
+    /* transform: translate(-50%, -50%); */
+}
+
+.loading-gif {
+    width: 20%;
+    height: 20%;
+    position: relative;
+}

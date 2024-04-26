@@ -33,7 +33,7 @@ func ReadCache() {
 	// Create a scanner to read from the file
 	scanner := bufio.NewScanner(file)
 	buf := make([]byte, 0, 64*1024)
-	scanner.Buffer(buf, 1024*1024)
+	scanner.Buffer(buf, 1024*1024*1024)
 	
 	// Process each line in the file
 	for scanner.Scan() {
