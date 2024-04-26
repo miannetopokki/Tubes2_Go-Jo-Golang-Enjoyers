@@ -41,40 +41,47 @@ var reachedDestination bool = false
 // }
 
 func searchIDS(source_link string, destination_link string, maxdepth int) resultStruct {
-	cache, err := bigcache.NewBigCache(bigcache.DefaultConfig(10 * time.Minute))
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// Redirect log output to ioutil.Discard to suppress log messages
-	log.SetOutput(ioutil.Discard)
-	var path []string
 	var final_path []string
 	degree := 0
 	waktu := 0
-	url := "https://en.wikipedia.org/wiki/" + source_link
-	start := time.Now()
-
-	for i := 0; i < maxdepth; i++ {
-		fmt.Println("Searching in depth ", i+1, "...")
-		dfs(source_link, url, destination_link, i, 0, &reachedDestination, &path, &final_path, cache)
-		if reachedDestination {
-			finish := time.Now()
-			elapsed := finish.Sub(start)
-			waktu = int(elapsed.Milliseconds())
-			fmt.Println("Time : ", elapsed)
-			fmt.Println("Total unique links:", uniqueLinkCount)
-			fmt.Println("Path:", source_link, " -> ", strings.Join(final_path, " -> "))
-			fmt.Println("Destination reached!")
-			fmt.Println("Depth : ", i+1)
-			degree = i + 1
-
-			break
-		} else {
-			fmt.Println("Destination not found in depth ", i+1)
+	uniqueLinkCount := 0
+	if(source_link == destination_link){
+		final_path = append(final_path,removeChar(source_link,"_"))
+	}else{
+		cache, err := bigcache.NewBigCache(bigcache.DefaultConfig(10 * time.Minute))
+		if err != nil {
+			log.Fatal(err)
+			
 		}
+
+		log.SetOutput(ioutil.Discard)
+		var path []string
+		url := "https://en.wikipedia.org/wiki/" + source_link
+		start := time.Now()
+	
+		for i := 0; i < maxdepth; i++ {
+			fmt.Println("Searching in depth ", i+1, "...")
+			dfs(source_link, url, destination_link, i, 0, &reachedDestination, &path, &final_path, cache)
+			if reachedDestination {
+				finish := time.Now()
+				elapsed := finish.Sub(start)
+				waktu = int(elapsed.Milliseconds())
+				fmt.Println("Time : ", elapsed)
+				fmt.Println("Total unique links:", uniqueLinkCount)
+				fmt.Println("Path:", source_link, " -> ", strings.Join(final_path, " -> "))
+				fmt.Println("Destination reached!")
+				fmt.Println("Depth : ", i+1)
+				degree = i + 1
+	
+				break
+			} else {
+				fmt.Println("Destination not found in depth ", i+1)
+			}
+		}
+		reachedDestination = false
+		
+
 	}
-	reachedDestination = false
 	result := resultStruct{
 		Path:    final_path,
 		Degrees: degree,
@@ -86,6 +93,7 @@ func searchIDS(source_link string, destination_link string, maxdepth int) result
 	defer visitedLinks.Unlock()
 	visitedLinks.m = make(map[string]bool)
 	return result
+
 
 }
 
