@@ -89,6 +89,8 @@ func WikiGame(w http.ResponseWriter, r *http.Request) {
 		Result    string
 		Algorithm string
 	}{sent, succeed, validSrc, validDest, infoSrcDest, finalResult, result, algorithm})
+
+	WriteCache()
 }
 
 func isValidWikiLink(url string) bool {
@@ -106,6 +108,8 @@ func main() {
 	go func() {
 		log.Println(http.ListenAndServe("localhost:6060", nil))
 	}()
+
+	ReadCache()
 
 	cache.items = make(map[string]*cachedItem)
 	cache.maxItems = 1000 // Set batasan ukuran cache di sini

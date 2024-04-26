@@ -118,7 +118,10 @@ var (
 	startTitle string
 	endTitle string
 	queueMutex sync.Mutex
+	fileMutex sync.Mutex
 	seenMutex sync.RWMutex
+
+	file *os.File
 	
     workerCount = 1000 // Number of concurrent workers
     workerSem   = make(chan struct{}, workerCount)
@@ -185,44 +188,89 @@ func CheckFound(title string, path []string, iter int) bool {
 	return found
 }
 
-func GetLinks(doc *goquery.Document, iter int, path []string) {
+func GetLinks(doc *goquery.Document, docTitle string, iter int, path []string) {
+	var linkList []string = []string{}
+
 	// Iterate over links
 	doc.Find("a").EachWithBreak(func(i int, s *goquery.Selection) bool {
 		link, exists := s.Attr("href")
 		title, _ := s.Attr("title")
 
 		if exists && IsValidURL(link, title) {
+			// fileMutex.Lock()
+			// file.WriteString("(scrape)" + title + " (" + strings.Join(path, " -> ") + ")" + "\n")
+			// fileMutex.Unlock()
 			// Check if link is found
 			if CheckFound(title, path, iter) {
 				return false
 			}
+
+			// Add link to list
+			linkList = append(linkList, TitleToLink(title))
 	
 			// Get full URL
 			var newURL string = "https://en.wikipedia.org" + link
 
 			// Add link to queue
-			// queueMutex.Lock()
-			if heuristic[title] {
-				queue.EnqueueHead(Link{title, newURL, append(path, title), iter + 1})
-			} else {
-				queue.Enqueue(Link{title, newURL, append(path, title), iter + 1})
-				}
-			// queueMutex.Unlock()
+			// if heuristic[title] {
+				// 	queue.EnqueueHead(Link{title, newURL, append(path, title), iter + 1})
+				// } else {
+			// }
+			queueMutex.Lock()
+			queue.Enqueue(Link{title, newURL, append(path, title), iter + 1})
+			queueMutex.Unlock()
 		}
 		return true
 	})
+
+	if !found {
+		cacheBFSMutex.Lock()
+		cacheBFS[TitleToLink(docTitle)] = linkList
+		cacheBFSMutex.Unlock()
+	}
+}
+
+func GetLinksCache(parent string, iter int, path[] string) {
+	// Get links from cache
+	cacheBFSMutex.RLock()
+	var links []string = cacheBFS[parent]
+	cacheBFSMutex.RUnlock()
+
+	// Iterate over links
+	for _, link := range links {
+		var title string = LinkToTitle(link)
+		// fileMutex.Lock()
+		// file.WriteString("(cache)" + title + " (" + strings.Join(path, " -> ") + ")" + "\n")
+		// fileMutex.Unlock()
+		
+		if CheckFound(title, path, iter) {
+			return
+		}
+
+		// Get new URL
+		var newURL string = CreateWikiURL(link)
+
+		// Add link to queue
+		// if heuristic[title] {
+			// 	queue.EnqueueHead(Link{title, newURL, append(path, title), iter + 1})
+			// } else {
+				// }
+		queueMutex.Lock()	
+		queue.Enqueue(Link{title, newURL, append(path, title), iter + 1})
+		queueMutex.Unlock()
+	}
 }
 
 func BFSTraversal() {
 	// Start iteration	
 	for !found {
 		// Get queue head
-		// queueMutex.Lock()
 		for queue.IsEmpty() {
 			time.Sleep(10 * time.Millisecond)
 		}
+		queueMutex.Lock()
 		var L Link = queue.Dequeue()
-		// queueMutex.Unlock()
+		queueMutex.Unlock()
 
 		// Get queue head attributes
 		var iter int = L.iter
@@ -247,43 +295,61 @@ func BFSTraversal() {
 		articles++
 		articlesMutex.Unlock()
 
+		// If title == endTitle, end loop
+		if CheckFound(title, path, iter) {
+			return
+		}
+		
+		// Write root link
+		// fileMutex.Lock()
+		// WriteAndPrintRoot(iter, title, path)
+		// fileMutex.Unlock()
+		
+		// Set title to seen
+		seenMutex.Lock()
+		seen[title] = true
+		seenMutex.Unlock()
+		
+		// Check if page is in cache
+		cacheBFSMutex.RLock()
+		_, ok := cacheBFS[TitleToLink(title)]
+		cacheBFSMutex.RUnlock()
+		
 		// Acquire worker semaphore
 		workerSem <- struct{}{}
-		
+
 		go func() {
 			defer func() { <-workerSem }() // Release worker semaphore
-
-			// If title == endTitle, end loop
-			if CheckFound(title, path, iter) {
-				return
-			}
-			
-			// Write root link
-			// fileMutex.Lock()
-			WriteAndPrintRoot(iter, title, path)
-			// fileMutex.Unlock()
-			
-			// Set title to seen
-			seenMutex.Lock()
-			seen[title] = true
-			seenMutex.Unlock()
-
-			// Load HTML
-			var doc *goquery.Document
-			doc, _ = loadHTML(url)
 	
-			// Get links
-			GetLinks(doc, iter, path)
+			// If page is in cache, get links from cache
+			if ok {
+				fmt.Print(Yellow + "Cache hit: " + Reset)
+				WriteAndPrintRoot(iter, title, path)
+				GetLinksCache(TitleToLink(title), iter, path)
+			} else {
+				// Load HTML
+				fmt.Print(Red + "Cache miss: " + Reset)
+				WriteAndPrintRoot(iter, title, path)
+				var doc *goquery.Document
+				var docTitle string
+				doc, docTitle = loadHTML(url)
+		
+				// Get links
+				GetLinks(doc, docTitle, iter, path)
+			}
 		}()
 
-		time.Sleep(15 * time.Millisecond)
+		if !ok {
+			time.Sleep(18 * time.Millisecond)
+		}
 	}
 }
-
 func BFS(startPage string, endPage string) resultStruct {
 	articles = 0
 	var startURL string = CreateWikiURL(startPage)
 	var endURL string = CreateWikiURL(endPage)
+
+	file, _ = os.OpenFile("debug.txt", os.O_WRONLY|os.O_CREATE, 0644)
 	
 	// Read starting page
 	_, startTitle = loadHTML(startURL)
