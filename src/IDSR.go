@@ -115,10 +115,9 @@ func dfs(input string, url string, destination string, maxDepth int, currentDept
 		link, exists := s.Attr("href")
 		if exists && isValidLink(link, input, path) {
 			visitedLinks.Lock()
-			if !visitedLinks.m[link] {
-				visitedLinks.m[link] = true
+			if !visitedLinks.m[url] {
+				visitedLinks.m[url] = true
 				visitedLinks.Unlock()
-				// fmt.Println(getTitleFromURL(link))
 				uniqueLinkCount++
 			} else {
 				visitedLinks.Unlock()
@@ -126,10 +125,14 @@ func dfs(input string, url string, destination string, maxDepth int, currentDept
 			newPath := append(*path, getTitleFromURL(link))
 			// fmt.Println("Path:", input, " -> ", strings.Join(newPath, " -> "))
 
-			if destination == getTitleFromURL(link) || link == "/wiki/"+destination {
+			if destination == getTitleFromURL(link) || link == "/wiki/"+destination || destination == removeChar(getTitleFromURL((link)), "_") {
 				if !*reachedDestination {
 					*path = newPath //Path success nemu
-					*finalpath = newPath
+					*finalpath = append(*finalpath, input)
+					*finalpath = append(*finalpath, newPath...)
+					for idx, flink := range *finalpath {
+						(*finalpath)[idx] = removeChar(flink, "_")
+					}
 				}
 				*reachedDestination = true
 
@@ -166,6 +169,12 @@ func getTitleFromURL(url string) string {
 		return strings.TrimPrefix(url, "/wiki/")
 	}
 	return ""
+}
+func removeChar(url string, c string) string {
+	title := strings.TrimPrefix(url, "/wiki/")
+	title = strings.ReplaceAll(title, c, " ")
+	return title
+
 }
 
 func getFromCache(url string, cache *bigcache.BigCache) (*goquery.Document, bool) {
