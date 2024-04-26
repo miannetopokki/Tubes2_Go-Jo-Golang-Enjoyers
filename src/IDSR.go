@@ -44,7 +44,7 @@ func searchIDS(source_link string, destination_link string, maxdepth int) result
 	var final_path []string
 	degree := 0
 	waktu := 0
-	uniqueLinkCount := 0
+
 	if(source_link == destination_link){
 		final_path = append(final_path,removeChar(source_link,"_"))
 	}else{
