@@ -66,7 +66,6 @@ func WikiGame(w http.ResponseWriter, r *http.Request) {
 		if algorithm == "IDS" {
 			finalResult = searchIDS(infoSrcDest.Source, infoSrcDest.Destination, 10)
 		} else {
-			ReadCache()
 			finalResult = BFS(infoSrcDest.Source, infoSrcDest.Destination)
 			WriteCache()
 		}
@@ -106,11 +105,11 @@ func isValidWikiLink(url string) bool {
 }
 
 func main() {
-
 	go func() {
 		log.Println(http.ListenAndServe("localhost:6060", nil))
 	}()
 
+	ReadCache()
 
 	http.HandleFunc("/", WikiGame)
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))

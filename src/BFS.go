@@ -340,7 +340,7 @@ func BFSTraversal() {
 		}()
 
 		if !ok {
-			time.Sleep(18 * time.Millisecond)
+			time.Sleep(22 * time.Millisecond)
 		}
 	}
 }
@@ -367,6 +367,16 @@ func BFS(startPage string, endPage string) resultStruct {
 	// Initialize found flag
 	found = false
 	// initWorkers()
+
+	// Instantly return if start == end
+	if strings.EqualFold(startTitle, endTitle) {
+		return resultStruct{
+			Path:    []string{startTitle},
+			Degrees: 0,
+			Time:    0,
+			Artikel: 0,
+		}
+	}
 
 	// Start BFS traversal
 	start := time.Now()
