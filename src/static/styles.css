@@ -75,8 +75,8 @@ body {
     font-family: "Mansalva", sans-serif;
     color: #225c3d;
     position: absolute;
-    top: 400px;
-    left: 190px;
+    top: 450px;
+    left: 185px;
     transform: rotate(-5deg);
     font-size: 50px;
 }
@@ -140,7 +140,6 @@ body {
     cursor: pointer;
     color: #d6d6d6;
     transform: scale(1.2);
-    /* transform: translate(0, 80px); */
 }
 
 .b1 {
@@ -176,7 +175,6 @@ body {
     position: fixed;
     top: 50%;
     left: 890px;
-    /* transform: translate(-50%, -50%); */
 }
 
 .loading-gif {

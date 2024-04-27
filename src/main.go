@@ -89,7 +89,6 @@ func WikiGame(w http.ResponseWriter, r *http.Request) {
 		Result      string
 		Algorithm   string
 	}{sent, succeed, validSrc, validDest, infoSrcDest, finalResult, result, algorithm})
-
 }
 
 func isValidWikiLink(url string) bool {
