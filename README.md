@@ -22,10 +22,10 @@ Tidak ada kebutuhan khusus selain instalasi compiler Go
    ```sh
    git clone https://github.com/miannetopokki/Tubes2_Go-Jo.git
    ```
-2. Buka folder "src" lalu buka terminal
+2. Buka folder "src" lalu buka terminal (jika pada folder src tidak ada cache.txt, buat terlebih dahulu)
 3. Jalankan web dengan perintah
     ```sh
-    go run main.go
+    go run main.go IDSR.go BFS.go BFSCache.go queueLinked.go
     ```
 4. Terminal akan menampilkan alamat tempat program dijalankan. Pengguna dapat melakukan ctrl + click pada teks di terminal atau membuka secara manual pada browser.
     ```sh
