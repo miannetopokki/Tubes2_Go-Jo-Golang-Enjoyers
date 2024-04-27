@@ -14,14 +14,17 @@ var (
 	cacheBFSMutex sync.RWMutex = sync.RWMutex{}
 )
 
+// Convert title to link
 func TitleToLink(title string) string {
 	return strings.Replace(title, " ", "_", -1);
 }
 
+// Convert link to title
 func LinkToTitle(link string) string {
 	return strings.Replace(link, "_", " ", -1);
 }
 
+// Read cache from file
 func ReadCache() {
 	// Open the cache file for reading
 	file, err := os.OpenFile("cache.txt", os.O_RDWR, 0644)
@@ -54,15 +57,19 @@ func ReadCache() {
 	}
 }
 
+// Write cache to file
 func WriteCache() {
+	// Remove old cache file
 	os.Remove("cache.txt")
 
+	// Create new cache file
 	file2, err := os.OpenFile("cache.txt", os.O_CREATE, 0644);
 	if err != nil {
 		log.Fatalf("Error opening file: %v", err)
 	}
 	defer file2.Close()
 
+	// Write values from the map to the cache file
 	for key, values := range cacheBFS {
 		line := fmt.Sprintf("%s %s\n", key, strings.Join(values, " "))
 
