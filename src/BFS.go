@@ -123,7 +123,7 @@ var (
 
 	file *os.File
 	
-    workerCount = 1000 // Number of concurrent workers
+    workerCount = 100 // Number of concurrent workers
     workerSem   = make(chan struct{}, workerCount)
 
 	heuristic = map[string]bool{

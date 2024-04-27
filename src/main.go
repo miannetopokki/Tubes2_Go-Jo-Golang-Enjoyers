@@ -67,7 +67,6 @@ func WikiGame(w http.ResponseWriter, r *http.Request) {
 			finalResult = searchIDS(infoSrcDest.Source, infoSrcDest.Destination, 10)
 		} else {
 			finalResult = BFS(infoSrcDest.Source, infoSrcDest.Destination)
-			WriteCache()
 		}
 
 		// Create result path
@@ -104,12 +103,18 @@ func isValidWikiLink(url string) bool {
 	return resp.StatusCode >= 200 && resp.StatusCode < 300
 }
 
+func WriteCacheContainer(w http.ResponseWriter, r *http.Request) {
+	WriteCache()
+	w.WriteHeader(http.StatusOK)
+}
+
 func main() {
 	go func() {
 		log.Println(http.ListenAndServe("localhost:6060", nil))
 	}()
 
 	ReadCache()
+	http.HandleFunc("/cache", WriteCacheContainer)
 
 	http.HandleFunc("/", WikiGame)
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))

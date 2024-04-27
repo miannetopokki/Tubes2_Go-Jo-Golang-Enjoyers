@@ -39,6 +39,28 @@ body {
     position: relative;
 }
 
+.cacheContainer {
+    text-align: center;
+}
+
+.cacheContainer button {
+    border-radius: 20px;
+    font-size: 105%;
+    font-family: "Open Sans", sans-serif;
+    background-color: #273b7d;
+    color: white;
+    padding-left: 15px;
+    padding-right: 15px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+
+.cacheContainer button:hover {
+    cursor: pointer;
+    color: #d6d6d6;
+    transform: scale(1.1);
+}
+
 .formContainer {
     background-color: #d9dbca;
     margin: auto;

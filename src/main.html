@@ -45,6 +45,14 @@
         <br>
         <br>
 
+        <div class="cacheContainer">
+            <form method="POST" action="/cache">
+                <button id="cache-button" type="submit">
+                    Save Cache
+                </button>
+            </form>
+        </div>
+
         <div class="formContainer">
             <h1 class="formText">try it out!</h1>
             <form method="POST" action="/">
@@ -72,7 +80,6 @@
                 </div>
             </form>
         </div>
-
 
         {{if .Sent}}
             <div class="failed">
