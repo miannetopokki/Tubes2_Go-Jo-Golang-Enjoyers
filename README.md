@@ -34,3 +34,7 @@ Tidak ada kebutuhan khusus selain instalasi compiler Go
 5. Akan ada dua masukan yang akan diterima program, yaitu halaman wikipedia awal dan tujuan.
 6. Ada 2 tombol untuk memproses masukan, yaitu BFS dan IDS. Algoritma yang akan dijalankan bergantung pada tombol yang dipilih. 
 7. Program akan menampilkan hasil pencarian, waktu pencarian, derajat pencarian, dan banyak halaman yang dikunjungi.
+
+## Credits
+
+Dalam pengembangan aplikasi ini, kami mengadopsi penggunaan teknologi caching untuk algoritma IDS dari library [bigcache](https://github.com/allegro/bigcache).
