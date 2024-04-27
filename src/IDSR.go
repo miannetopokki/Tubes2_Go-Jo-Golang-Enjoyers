@@ -29,7 +29,7 @@ var cache = struct {
 	m     map[string][]byte
 	size  int64 
 	limit int64 
-}{m: make(map[string][]byte), limit: 3000*1024 * 1024} // 3 GB limit
+}{m: make(map[string][]byte), limit: 1500*1024 * 1024} // 3 GB limit
 
 
 
