@@ -3,8 +3,6 @@ package main
 import (
 	"fmt"
 	"log"
-	"net/http"
-	"os"
 	"strconv"
 	"strings"
 	"sync"
@@ -20,90 +18,6 @@ const (
     Yellow = "\033[33m"
 )
 
-func URLExists(url string) bool {
-	resp, err := http.Head(url)
-	if err != nil {
-		fmt.Println(err)
-		return false
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode == http.StatusOK {
-		return true
-	} else {
-		return false
-	}
-}
-
-func CreateWikiURL(title string) string {
-	return "https://en.wikipedia.org/wiki/" + title 
-}
-
-func GetTitle(url string) string {
-	return url[6:]
-}
-
-func AskTitleInput(prompt string) string {
-	var title string
-	
-	// Get title
-	fmt.Print(prompt)
-	fmt.Scanln(&title)
-
-	// Check if page exists
-	url := CreateWikiURL(title)
-	if !URLExists(url) {
-		log.Fatal("Wikipedia page doesn't exist!")
-	}
-	return url
-}
-
-func getHTMLDocument(url string) *goquery.Document {
-	doc, err := goquery.NewDocument(url)
-	
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return doc
-}
-
-func loadHTML(url string) (*goquery.Document, string) {
-	// Make HTTP request
-	// var res *http.Response = MakeGETRequest(url)
-	
-	// Get HTML document
-	var doc *goquery.Document = getHTMLDocument(url)	
-
-	// Return document and title
-	var title string = doc.Find(".mw-page-title-main").First().Text()
-	var title_alt string = doc.Find(".firstHeading.mw-first-heading").First().Text()
-	if title == "" {
-		title = title_alt
-	}
-	return doc, title
-}
-
-func loadFile(filename string) *os.File {
-	// Open or create a file for writing
-    file, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE, 0644)
-	
-    if err != nil {
-		log.Fatal(err)
-    }
-
-	return file
-}
-
-func IsValidURL(url string, title string) bool {
-	return strings.HasPrefix(url, "/wiki/") && !strings.Contains(url, ":") && !strings.Contains(url, "#") && !strings.Contains(url, "#") && url != "/wiki/Main_Page" && title != "View the content page [c]"
-}
-
-type Key struct {
-	title string
-	iter int
-}
-
 type Link struct {
 	title string
 	url string
@@ -118,31 +32,10 @@ var (
 	startTitle string
 	endTitle string
 	queueMutex sync.Mutex
-	fileMutex sync.Mutex
 	seenMutex sync.RWMutex
-
-	file *os.File
 	
     workerCount = 100 // Number of concurrent workers
     workerSem   = make(chan struct{}, workerCount)
-
-	heuristic = map[string]bool{
-		"Biblioteca Nacional de España":          	true,
-		"Bibliothèque nationale de France":       	true,
-		"Digital object identifier":              	true,
-		"Doi (identifier)":                       	true,
-		"Integrated Authority File":              	true,
-		"International Standard Book Number":     	true,
-		"ISBN (identifier)":                      	true,
-		"International Standard Name Identifier": 	true,
-		"LIBRIS": 									true,
-		"Library of Congress Control Number":     	true,
-		"MusicBrainz":                            	true,
-		"National Diet Library":                  	true,
-		"National Library of the Czech Republic": 	true,
-		"PubMed Central":                         	true,
-		"Virtual International Authority File":   	true,
-	}
 
 	articles int
 	articlesMutex sync.Mutex
@@ -153,12 +46,36 @@ var (
 	ResultArtikel 	int
 )
 
-// func initWorkers() {
-//     // Fill worker semaphore channel
-//     for i := 0; i < workerCount; i++ {
-//         workerSem <- struct{}{}
-//     }
-// }
+func CreateWikiURL(title string) string {
+	return "https://en.wikipedia.org/wiki/" + title 
+}
+
+func getHTMLDocument(url string) *goquery.Document {
+	doc, err := goquery.NewDocument(url)
+	
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return doc
+}
+
+func loadHTML(url string) (*goquery.Document, string) {
+	// Get HTML document
+	var doc *goquery.Document = getHTMLDocument(url)	
+
+	// Return document and title
+	var title string = doc.Find(".mw-page-title-main").First().Text()
+	var title_alt string = doc.Find(".firstHeading.mw-first-heading").First().Text()
+	if title == "" {
+		title = title_alt
+	}
+	return doc, title
+}
+
+func IsValidURL(url string, title string) bool {
+	return strings.HasPrefix(url, "/wiki/") && !strings.Contains(url, ":") && !strings.Contains(url, "#") && !strings.Contains(url, "#") && url != "/wiki/Main_Page" && title != "View the content page [c]"
+}
 
 func WriteAndPrintRoot(iter int, title string, path []string) {
 	// Print
