@@ -129,6 +129,10 @@ func GetLinks(doc *goquery.Document, docTitle string, iter int, path []string) {
 		link, exists := s.Attr("href")
 		title, _ := s.Attr("title")
 
+		if idx := strings.Index(link, "#"); idx != -1 {
+			link = link[:idx]
+		}
+
 		if exists && IsValidURL(link, title) {
 			// Check if link is found
 			if CheckFound(title, path, iter) {
